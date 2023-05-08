@@ -140,8 +140,8 @@ void CSubdataSearchGUIDlg::StartSearch()
 				ErrorTips(TEXT("不能接受的二进制数据"));
 
 			CString Hex("0123456789ABCDEF");
-			char hexData_1;
-			char hexData_2;
+			unsigned char hexData_1;
+			unsigned char hexData_2;
 
 			byteData = new char[cstr.GetLength() / 2];
 			byteDataSize = cstr.GetLength() / 2;
@@ -149,8 +149,6 @@ void CSubdataSearchGUIDlg::StartSearch()
 			{
 				hexData_1 = Hex.Find(cstr[i * 2]) * 16;
 				hexData_2 = Hex.Find(cstr[i * 2 + 1]);
-				if (hexData_1 < 0 || hexData_2 < 0)
-					ErrorTips(TEXT("不能接受的二进制数据"));
 
 				byteData[i] = hexData_1 + hexData_2;
 			}
