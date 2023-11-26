@@ -43,19 +43,15 @@ BEGIN_MESSAGE_MAP(CSubdataSearchGUIDlg, CDialogEx)
 	ON_EN_UPDATE(IDC_EDIT3, &CSubdataSearchGUIDlg::OnEnUpdateEdit3)
 END_MESSAGE_MAP()
 
-
-// CSubdataSearchGUIDlg 消息处理程序
-
+// 初始化窗口
 BOOL CSubdataSearchGUIDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// 设置此对话框的图标。  当应用程序主窗口不是对话框时，框架将自动
-	//  执行此操作
-	SetIcon(m_hIcon, TRUE);			// 设置大图标
-	SetIcon(m_hIcon, FALSE);		// 设置小图标
+	// 设置此对话框的图标
+	SetIcon(m_hIcon, TRUE);	
+	SetIcon(m_hIcon, FALSE);
 
-	// TODO: 在此添加额外的初始化代码
 	CString cstrColumn[] = { TEXT("文件名"),TEXT("偏移量") };
 	for (int i = 0; i < 2; i++)
 		Result.InsertColumn(i, cstrColumn[i], LVCFMT_LEFT, 200);
@@ -68,12 +64,8 @@ BOOL CSubdataSearchGUIDlg::OnInitDialog()
 	progressCtrl.SetRange(0, PROGRESS_CTRL_LEN);
 	Result.SetExtendedStyle(Result.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
-	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+	return TRUE;
 }
-
-// 如果向对话框添加最小化按钮，则需要下面的代码
-//  来绘制该图标。  对于使用文档/视图模型的 MFC 应用程序，
-//  这将由框架自动完成。
 
 void CSubdataSearchGUIDlg::OnPaint()
 {
@@ -100,18 +92,15 @@ void CSubdataSearchGUIDlg::OnPaint()
 	}
 }
 
-//当用户拖动最小化窗口时系统调用此函数取得光标
-//显示。
+// 当用户拖动最小化窗口时系统调用此函数取得光标显示
 HCURSOR CSubdataSearchGUIDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
-
+// 检查输入项
 void CSubdataSearchGUIDlg::StartSearch()
 {
-	// TODO: 在此添加控件通知处理程序代码
 	CString cstr;
 	int byteDataSize;
 	char* byteData = NULL;
@@ -121,12 +110,13 @@ void CSubdataSearchGUIDlg::StartSearch()
 	{
 		DirectoryURL.GetWindowText(cstr);
 		if (!cstr.Compare(TEXT("")))
-			ErrorTips(TEXT("路径为空"));
+			throw(TEXT("路径为空"));
 
 		editData.GetWindowText(cstr);
 		if (!cstr.Compare(TEXT("")))
-			ErrorTips(TEXT("内容为空"));
+			throw(TEXT("内容为空"));
 
+		// 检查模式 字符/十六进制
 		if (radioText.GetCheck())
 		{
 			byteData = new char[cstr.GetLength()];
@@ -137,11 +127,11 @@ void CSubdataSearchGUIDlg::StartSearch()
 		else
 		{
 			if (cstr.GetLength() % 2 != 0)
-				ErrorTips(TEXT("不能接受的二进制数据"));
+				throw(TEXT("不能接受的字节数据"));
 
 			CString Hex("0123456789ABCDEF");
-			unsigned char hexData_1;
-			unsigned char hexData_2;
+			int hexData_1;
+			int hexData_2;
 
 			byteData = new char[cstr.GetLength() / 2];
 			byteDataSize = cstr.GetLength() / 2;
@@ -149,6 +139,9 @@ void CSubdataSearchGUIDlg::StartSearch()
 			{
 				hexData_1 = Hex.Find(cstr[i * 2]) * 16;
 				hexData_2 = Hex.Find(cstr[i * 2 + 1]);
+
+				if (hexData_1 < 0 || hexData_2 < 0)
+					throw(TEXT("不能接受的字节数据"));
 
 				byteData[i] = hexData_1 + hexData_2;
 			}
@@ -287,7 +280,7 @@ DWORD WINAPI CSubdataSearchGUIDlg::ProcessUnit(LPVOID lpParameter)
 
 		if (searchFlag)
 		{
-			// 获取互斥元 访问搜索结果列表
+			// 获取互斥元 将结果写入搜索结果列表
 			WaitForSingleObject(hMutex_2, INFINITE);
 			vsearchList.push_back(_SearchList_t{ cstrFilename, vPosList });
 			pDlg->progressCtrl.SetPos((int)((float)pProcessUnitData_t->index / iFilesListSize * PROGRESS_CTRL_LEN));
@@ -297,19 +290,12 @@ DWORD WINAPI CSubdataSearchGUIDlg::ProcessUnit(LPVOID lpParameter)
 	return 0;
 }
 
+// 限制线程数量
 void CSubdataSearchGUIDlg::OnEnUpdateEdit3()
 {
-	// TODO:  如果该控件是 RICHEDIT 控件，它将不
-	// 发送此通知，除非重写 CDialogEx::OnInitDialog()
-	// 函数，以将 EM_SETEVENTMASK 消息发送到该控件，
-	// 同时将 ENM_UPDATE 标志“或”运算到 lParam 掩码中。
-
-	// TODO:  在此添加控件通知处理程序代码
 	CString cstrProcessNum;
 	editProcessNum.GetWindowText(cstrProcessNum);
 	int iProcessNum = atoi(CStringA(cstrProcessNum));
-
-
 
 	if (iProcessNum > THREAD_NUM_MAX)
 	{

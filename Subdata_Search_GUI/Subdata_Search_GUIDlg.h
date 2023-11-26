@@ -77,7 +77,6 @@ private:
 	CEdit editProcessNum;
 	CSpinButtonCtrl spinProcessNum;
 
-	inline void ErrorTips(TCHAR* cstrInfo) { throw(cstrInfo); };
 	static DWORD WINAPI Execute(LPVOID lpParameter);
 	static DWORD WINAPI ProcessUnit(LPVOID lpParameter);
 
